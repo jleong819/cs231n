@@ -31,11 +31,18 @@ def svm_loss_naive(W, X, y, reg):
         scores = X[i].dot(W)
         correct_class_score = scores[y[i]]
         for j in range(num_classes):
+            # if the correct class
             if j == y[i]:
                 continue
             margin = scores[j] - correct_class_score + 1 # note delta = 1
             if margin > 0:
                 loss += margin
+                
+                # at the incorrect class, add x_i
+                dW[:,j] += X[i]
+                
+                # at the correct class, subtract x_i
+                dW[:,y[i]] -= X[i]
 
     # Right now the loss is a sum over all training examples, but we want it
     # to be an average instead so we divide by num_train.
@@ -54,7 +61,9 @@ def svm_loss_naive(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # average over all training examples
+    dW /= num_train
+    dW = dW + reg * 2 * W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     
@@ -78,7 +87,21 @@ def svm_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # get scores
+    scores = X.dot(W)
+    
+    # get scores of true classes
+    true_class_scores = scores[np.arange(len(scores)), y].reshape((len(scores),1))
+    
+    # get score_wrong - score_true + 1
+    score_diff_with_margin = scores - true_class_scores + 1 # 1 is the margin
+    
+    # true classes will have values of exactly 1, want to replace with 0 so don't
+    # add to the loss
+    
+    score_diff_with_margin[score_diff_with_margin == 1] = 0
+    margin = np.maximum(score_diff_with_margin, 0)
+    loss = np.sum(margin) / X.shape[0]
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -93,7 +116,16 @@ def svm_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+#     num_contribute = np.sum(score_diff_with_margin > 0, axis = 1).reshape((X.shape[0],1))
+    
+    margin[margin>0] = 1
+    valid_count = np.sum(margin, axis=1)
+    
+    # Subtract in correct class (-s_y)
+    margin[np.arange(len(scores)),y ] -= valid_count
+    dW = (X.T).dot(margin) / X.shape[0]
+
+    dW = dW + reg * 2 *W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
