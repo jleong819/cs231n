@@ -98,11 +98,13 @@ def svm_loss_vectorized(W, X, y, reg):
     
     # true classes will have values of exactly 1, want to replace with 0 so don't
     # add to the loss
-    
     score_diff_with_margin[score_diff_with_margin == 1] = 0
     margin = np.maximum(score_diff_with_margin, 0)
     loss = np.sum(margin) / X.shape[0]
 
+    # margin is a NxC matrix that has the contribution to the multiclass SVM loss
+    # for each observation for each class (0 or the score diff with margin)
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     #############################################################################
@@ -116,15 +118,28 @@ def svm_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-#     num_contribute = np.sum(score_diff_with_margin > 0, axis = 1).reshape((X.shape[0],1))
+    # we are subtracting/adding the observation x_i based on the class scores
+    # for this same individual x_i
     
+    # for gradient, make indicator of whether or not class contributes to the
+    # loss function (and gradient)
     margin[margin>0] = 1
+    
+    # for each observation, how many classes add to the loss/gradient
     valid_count = np.sum(margin, axis=1)
     
     # Subtract in correct class (-s_y)
+    # for correct class for observation, count how many times we need to subtract
+    # s_y from the gradient
     margin[np.arange(len(scores)),y ] -= valid_count
-    dW = (X.T).dot(margin) / X.shape[0]
+    
+    
+    # X is NxD and margin is NxC
+    dW = (X.T).dot(margin)
+    
+    dW /= X.shape[0]
 
+    # add regularization to gradient
     dW = dW + reg * 2 *W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
