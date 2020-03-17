@@ -32,9 +32,39 @@ def softmax_loss_naive(W, X, y, reg):
     # regularization!                                                           #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    
+    scores = X.dot(W)
+   
+    # for each observation
+    for obs in range(len(X)):
+        numerator = 0.0
+        denominator = 0.0
+        
+        # for each class
+        for cls in range(scores.shape[1]):
+            # if the true score
+            if cls == y[obs]:
+                numerator += np.exp(scores[obs,cls])
 
-    pass
-
+            denominator += np.exp(scores[obs,cls])
+                                  
+        loss += -1*np.log(numerator/denominator)
+        
+        # the gradient component for each class score for each observation will be
+        # probability of that class for that observation mulitplied by the x_i
+        # if class is true class, then subtract 1 from the probs (cls==y[obs]) is an
+        # indicator function
+        for cls in range(scores.shape[1]):
+            probs = np.exp(scores[obs,cls])/denominator
+            dW[:,cls] += (probs-(cls==y[obs])) * X[obs,:]
+        
+    # regularization and averaging
+    loss /= len(X)
+    loss += 0.5*reg*np.sum(W*W)
+    
+    dW /= len(X)
+    dW += reg * W
+                             
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     return loss, dW
@@ -58,7 +88,33 @@ def softmax_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    scores = X.dot(W)
+    exp_scores = np.exp(scores)
+    numerators = exp_scores[np.arange(len(exp_scores)), y] # the exp. score at the correct class
+    denominators = np.sum(exp_scores, axis=1) # the sum of the exp. scores
+    
+    loss = np.sum(-np.log(numerators/denominators))
+        
+    probs = exp_scores/denominators.reshape((len(X),1))
+    
+    
+    # the gradient component for each class score for each observation will be
+    # probability of that class for that observation mulitplied by the x_i
+    # if class is true class, then subtract 1 from the probs (cls==y[obs]) is an
+    # indicator function
+    
+    # subtract 1 from the probability of the true class
+    # now probs holds the factor by which we will add/subtract the corresponding x_i
+    # from our gradient
+    probs[np.arange(len(probs)), y] -= 1
+    dW = (X.T).dot(probs)    
+    
+    # regularization and averaging
+    loss /= len(X)
+    loss += 0.5*reg*np.sum(W*W)
+    
+    dW /= len(X)
+    dW += reg * W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
