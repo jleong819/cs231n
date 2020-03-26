@@ -80,7 +80,12 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        # first fully connected layer and RELU activation
+        fc1 = X.dot(W1)+b1
+        X2 = np.maximum(0,fc1)
+        
+        # second layer is the scores
+        scores = X2.dot(W2) + b2
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -98,7 +103,27 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        
+        # Softmax Classifier Loss
+        exp_scores = np.exp(scores)
+        numerators = exp_scores[np.arange(len(exp_scores)), y] # the exp. score at the correct class
+        denominators = np.sum(exp_scores, axis=1) # the sum of the exp. scores
+
+        loss = np.sum(-np.log(numerators/denominators))
+        loss /= len(X)
+        
+        # L2 Regularization is sum of weights squared
+        loss += reg*(np.sum(W1*W1) + np.sum(W2*W2))
+
+        # the gradient component for each class score for each observation will be
+        # probability of that class for that observation mulitplied by the x_i
+        # if class is true class, then subtract 1 from the probs (cls==y[obs]) is an
+        # indicator function
+
+        # subtract 1 from the probability of the true class
+        # now probs holds the factor by which we will add/subtract the corresponding x_i
+        # from our gradient
+        
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -111,7 +136,9 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
+        # Want the gradients for W1, W2, b1, b2
         pass
+        
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
