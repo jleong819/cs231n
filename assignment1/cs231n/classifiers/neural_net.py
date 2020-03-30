@@ -136,19 +136,20 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        # Want the gradients for W1, W2, b1, b2
-#         dW1
-#         dW2
-#         db1
-#         db2
+        # the gradient component for each class score for each observation will be
+        # probability of that class for that observation mulitplied by the x_i
+        # if class is true class, then subtract 1 from the probs
+        softmax_loss_matrix = exp_scores/np.sum(exp_scores, axis=1, keepdims=True) # should add up to 1 rowwise
         
-        # ??
-        softmax_loss_matrix = exp_scores/np.sum(exp_scores, axis=1, keepdims=True)
-        softmax_loss_matrix[np.arange(N), y] -= 1
-        softmax_loss_matrix /= N
+      
+        # subtract 1 from the probability of the true class
+        # now probs holds the factor by which we will add/subtract the corresponding x_i
+        # from our gradient
+        softmax_loss_matrix[np.arange(N), y] -= 1 # subtract 1 at the correct class
+        softmax_loss_matrix /= N # average over the N training examples
         
-        dW2 = X2.T.dot(softmax_loss_matrix)
-        db2 = softmax_loss_matrix.sum(axis=0)
+        dW2 = X2.T.dot(softmax_loss_matrix) # softmax_loss_matrix is gradient of loss wrt scores
+        db2 = softmax_loss_matrix.sum(axis=0) # columnwise sum, for each class
         
         dW1 = softmax_loss_matrix.dot(W2.T)
         dhidden_layer_vals = dW1* (hidden_layer_vals>0)
