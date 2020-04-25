@@ -26,9 +26,16 @@ def affine_forward(x, w, b):
     # will need to reshape the input into rows.                               #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    
+    # number of dimensions
+    D = int(x.flatten().shape[0]/x.shape[0])
+    
+    X = x.reshape(x.shape[0],D)
 
-    pass
-
+    # scores
+    out = np.dot(X, w) + b
+    
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -60,7 +67,18 @@ def affine_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N = x.shape[0]
+    D = int(x.flatten().shape[0]/x.shape[0])
+    
+    X = x.reshape(N,D)
+
+    
+    dx = np.dot(dout, w.T)
+    dx = dx.reshape(x.shape)
+
+    
+    dw = np.dot(X.T, dout)
+    db = dout.sum(axis=0)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -86,7 +104,7 @@ def relu_forward(x):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    out = np.maximum(0,x)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -113,7 +131,11 @@ def relu_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # 0 if x<=0 and 1 if x>0 --> this is for the piecewise derivative of relu
+    x_binary = np.maximum(0,x)
+    x_binary[x_binary > 0] = 1
+    
+    dx = np.multiply(x_binary, dout)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -193,8 +215,26 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
-
+        mu = x.mean(axis=0)
+        var = x.var(axis=0) + eps
+        std = np.sqrt(var)
+        
+        z = (x-mu)/std
+        out = gamma*z + beta
+        
+        running_mean = running_mean*momentum + (1-momentum)*mu
+        running_var = running_var*momentum + (1-momentum)*var
+        
+        cache = {
+            "x":x,
+            "mean":mu,
+            "std":std,
+            "z":z,
+            "gamma":gamma,
+            "var":var      
+        }
+        
+ 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                           END OF YOUR CODE                          #
@@ -208,7 +248,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        z = (x-running_mean)/np.sqrt(running_var+eps)
+        out = gamma*z + beta
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
